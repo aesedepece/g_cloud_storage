@@ -5,20 +5,24 @@ defmodule GCloudStorage.Object do
   Upload object
   """
   @spec upload(String.t, String.t, String.t, String.t) :: tuple
-  def upload bucket, name, content, media_type do
-    simple_upload bucket, name, content, media_type
+  def upload(bucket, name, content, payload) do
+    simple_upload bucket, name, content, payload
   end
 
   @doc """
   Simple upload
   """
   @spec simple_upload(String.t, String.t, String.t, String.t) :: tuple
-  def simple_upload bucket, name, content, media_type do
+  def simple_upload(bucket, name, content, media_type) when is_binary(media_type) do
     headers = %{
-      "Content-type" => media_type,
-      "Content-length" => String.length(content)
+      "Content-type" => media_type
     }
+    simple_upload bucket, name, content, headers
+  end
 
+  @spec simple_upload(String.t, String.t, String.t, map) :: tuple
+  def simple_upload(bucket, name, content, headers) when is_map(headers) do
+    headers = Map.put_new headers, "Content-length", String.length(content)
     GCloudStorage.Uploadclient.post("#{bucket}/o?uploadType=media&name=#{name}", content, headers)
     |> extract_body
   end
